@@ -1,13 +1,13 @@
 // Pin Definitions
-#define DATA_PIN 4   // DS - Serial Data Input
-#define LATCH_PIN 6  // ST_CP - Latch Pin
-#define CLOCK_PIN 5  // SH_CP - Clock Pin
+#define DATA_PIN 2   // DS - Serial Data Input
+#define LATCH_PIN 4  // ST_CP - Latch Pin
+#define CLOCK_PIN 3  // SH_CP - Clock Pin
 
 // Display Control Pins
-#define DS1 7  // First Display - Tens Digit
-#define DS2 8  // First Display - Ones Digit
-#define DS3 9  // Second Display - Tens Digit
-#define DS4 10 // Second Display - Ones Digit
+#define DS1 5  // First Display - Tens Digit
+#define DS2 6  // First Display - Ones Digit
+#define DS3 7  // Second Display - Tens Digit
+#define DS4 8 // Second Display - Ones Digit
 
 // Traffic Light Shift Register Outputs (Q0 - Q5)
 #define GREEN_1  0

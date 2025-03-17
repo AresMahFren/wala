@@ -9,6 +9,14 @@
 #define DS3 9  // Second Display - Tens Digit
 #define DS4 10 // Second Display - Ones Digit
 
+// Traffic Light Shift Register Outputs (Q0 - Q5)
+#define GREEN_1  0
+#define YELLOW_1 1
+#define RED_1    2
+#define GREEN_2  3
+#define YELLOW_2 4
+#define RED_2    5
+
 // Inverted 7-segment digit mappings (Common Cathode → HIGH means ON)
 const byte digitMap[10] = {
   0b00111111, // 0
@@ -23,9 +31,13 @@ const byte digitMap[10] = {
   0b01101111  // 9
 };
 
-// Countdown Values
-int firstDisplay = 20;  // First 2-digit display countdown
-int secondDisplay = 10; // Second 2-digit display countdown
+// Independent timers for each display
+int time1 = 30;  // Countdown for Display 1
+int time2 = 27;  // Countdown for Display 2
+
+// Active traffic light states
+int state1 = RED_1;
+int state2 = GREEN_2;
 
 void setup() {
   pinMode(DATA_PIN, OUTPUT);
@@ -44,71 +56,101 @@ void setup() {
 }
 
 void loop() {
+  unsigned long prevTime1 = millis();
+  unsigned long prevTime2 = millis();
+
   while (true) {
-    countdown(20, 10); // Phase 1
-    countdown(3, 3);   // Phase 2 (both count 3s together)
-    countdown(10, 20); // Phase 3
-  }
-}
+    unsigned long currentTime = millis();
 
-// Function to handle countdown
-void countdown(int first, int second) {
-  for (int i = first, j = second; i >= 0 || j >= 0; i--, j--) {
-    unsigned long startTime = millis();
-    
-    while (millis() - startTime < 1000) {  // Keep updating for 1 second
-      displayTwoDigit(i >= 0 ? i : 0, j >= 0 ? j : 0);
+    // Countdown for Display 1
+    if (currentTime - prevTime1 >= 1000) {
+      prevTime1 = currentTime;
+
+      if (time1 > 1) {
+        time1--;
+      } else {
+        switchLight1();
+      }
     }
+
+    // Countdown for Display 2
+    if (currentTime - prevTime2 >= 1000) {
+      prevTime2 = currentTime;
+
+      if (time2 > 1) {
+        time2--;
+      } else {
+        switchLight2();
+      }
+    }
+
+    // Update display every loop
+    displayTwoDigit(time1, time2, state1, state2);
   }
 }
 
-// Function to display a two-digit number on both displays
-void displayTwoDigit(int num1, int num2) {
+// Function to switch lights for Display 1
+void switchLight1() {
+  if (state1 == RED_1) {
+    state1 = GREEN_1;
+    time1 = 27;
+  } else if (state1 == GREEN_1) {
+    state1 = YELLOW_1;
+    time1 = 3;
+  } else if (state1 == YELLOW_1) {
+    state1 = RED_1;
+    time1 = 30;
+  }
+}
+
+// Function to switch lights for Display 2
+void switchLight2() {
+  if (state2 == GREEN_2) {
+    state2 = YELLOW_2;
+    time2 = 3;
+  } else if (state2 == YELLOW_2) {
+    state2 = RED_2;
+    time2 = 30;
+  } else if (state2 == RED_2) {
+    state2 = GREEN_2;
+    time2 = 27;
+  }
+}
+
+// Function to display numbers & control traffic lights
+void displayTwoDigit(int num1, int num2, int activeLight1, int activeLight2) {
   int tens1 = num1 / 10;
   int ones1 = num1 % 10;
   int tens2 = num2 / 10;
   int ones2 = num2 % 10;
 
-  // Display First Display Tens
+  byte ledState = (1 << activeLight1) | (1 << activeLight2);
+
   digitalWrite(DS1, LOW);
-  digitalWrite(DS2, HIGH);
-  digitalWrite(DS3, HIGH);
-  digitalWrite(DS4, HIGH);
-  updateShiftRegisters(digitMap[tens1]);
+  updateShiftRegisters(digitMap[tens1], ledState);
   delay(5);
   digitalWrite(DS1, HIGH);
 
-  // Display First Display Ones
   digitalWrite(DS2, LOW);
-  digitalWrite(DS1, HIGH);
-  digitalWrite(DS3, HIGH);
-  digitalWrite(DS4, HIGH);
-  updateShiftRegisters(digitMap[ones1]);
+  updateShiftRegisters(digitMap[ones1], ledState);
   delay(5);
   digitalWrite(DS2, HIGH);
 
-  // Display Second Display Tens
   digitalWrite(DS3, LOW);
-  digitalWrite(DS1, HIGH);
-  digitalWrite(DS2, HIGH);
-  digitalWrite(DS4, HIGH);
-  updateShiftRegisters(digitMap[tens2]);
+  updateShiftRegisters(digitMap[tens2], ledState);
   delay(5);
   digitalWrite(DS3, HIGH);
 
-  // Display Second Display Ones
   digitalWrite(DS4, LOW);
-  digitalWrite(DS1, HIGH);
-  digitalWrite(DS2, HIGH);
-  digitalWrite(DS3, HIGH);
-  updateShiftRegisters(digitMap[ones2]);
+  updateShiftRegisters(digitMap[ones2], ledState);
   delay(5);
   digitalWrite(DS4, HIGH);
 }
 
 // Function to update shift registers
-void updateShiftRegisters(byte value) {
+void updateShiftRegisters(byte displayData, byte ledData) {
   digitalWrite(LATCH_PIN, LOW);
-  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, value);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, ledData);
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, displayData);
   digitalWrite(LATCH_PIN, HIGH);
 }

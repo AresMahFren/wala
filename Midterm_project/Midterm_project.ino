@@ -1,11 +1,15 @@
+// Pin Definitions
 #define DATA_PIN 4   // DS - Serial Data Input
 #define LATCH_PIN 6  // ST_CP - Latch Pin
 #define CLOCK_PIN 5  // SH_CP - Clock Pin
-#define DS1 7        // First display, first digit
-#define DS2 8        // First display, second digit
-#define DS3 9        // Second display, first digit
-#define DS4 10       // Second display, second digit
 
+// Display Enable Pins
+#define DS1 7  // First display (tens)
+#define DS2 8  // First display (ones)
+#define DS3 9  // Second display (tens)
+#define DS4 10 // Second display (ones)
+
+// 7-segment display digit mappings (Common Cathode)
 const byte digitMap[10] = {
   0b00111111, // 0
   0b00000110, // 1
@@ -27,58 +31,42 @@ void setup() {
   pinMode(DS2, OUTPUT);
   pinMode(DS3, OUTPUT);
   pinMode(DS4, OUTPUT);
+  
+  // Ensure all displays are off initially
+  digitalWrite(DS1, LOW);
+  digitalWrite(DS2, LOW);
+  digitalWrite(DS3, LOW);
+  digitalWrite(DS4, LOW);
 }
 
 void loop() {
-  for (int i = 99; i >= 0; i--) {  // Countdown from 99
-    displayNumbers(i, i - 10);  // Display different numbers on each display
-    delay(1000);
+  countdown(30, DS1, DS2); // First display: Countdown from 30
+  countdown(40, DS3, DS4); // Second display: Countdown from 40
+}
+
+void countdown(int time, int tensPin, int onesPin) {
+  for (int t = time; t >= 0; t--) {
+    displayNumber(t, tensPin, onesPin);
+    delay(1000); // 1-second delay per countdown step
   }
 }
 
-void displayNumbers(int num1, int num2) {
-  int tens1 = num1 / 10;
-  int ones1 = num1 % 10;
-  int tens2 = num2 / 10;
-  int ones2 = num2 % 10;
+void displayNumber(int num, int tensPin, int onesPin) {
+  int tens = num / 10;
+  int ones = num % 10;
 
-  // Show first digit of first display
-  digitalWrite(DS1, HIGH);
-  digitalWrite(DS2, LOW);
-  digitalWrite(DS3, LOW);
-  digitalWrite(DS4, LOW);
   digitalWrite(LATCH_PIN, LOW);
-  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, digitMap[tens1]);
-  digitalWrite(LATCH_PIN, HIGH);
-  delay(5);  
 
-  // Show second digit of first display
-  digitalWrite(DS1, LOW);
-  digitalWrite(DS2, HIGH);
-  digitalWrite(DS3, LOW);
-  digitalWrite(DS4, LOW);
-  digitalWrite(LATCH_PIN, LOW);
-  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, digitMap[ones1]);
+  // Send both digits at the same time
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, digitMap[tens]); // Send tens first
+  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, digitMap[ones]); // Send ones second
+
   digitalWrite(LATCH_PIN, HIGH);
+
+  // Enable both digits at the same time
+  digitalWrite(tensPin, HIGH);
+  digitalWrite(onesPin, HIGH);
   delay(5);
-
-  // Show first digit of second display
-  digitalWrite(DS1, LOW);
-  digitalWrite(DS2, LOW);
-  digitalWrite(DS3, HIGH);
-  digitalWrite(DS4, LOW);
-  digitalWrite(LATCH_PIN, LOW);
-  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, digitMap[tens2]);
-  digitalWrite(LATCH_PIN, HIGH);
-  delay(5);
-
-  // Show second digit of second display
-  digitalWrite(DS1, LOW);
-  digitalWrite(DS2, LOW);
-  digitalWrite(DS3, LOW);
-  digitalWrite(DS4, HIGH);
-  digitalWrite(LATCH_PIN, LOW);
-  shiftOut(DATA_PIN, CLOCK_PIN, MSBFIRST, digitMap[ones2]);
-  digitalWrite(LATCH_PIN, HIGH);
-  delay(5);
+  digitalWrite(tensPin, LOW);
+  digitalWrite(onesPin, LOW);
 }

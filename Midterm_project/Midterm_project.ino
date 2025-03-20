@@ -1,7 +1,7 @@
 // Pin Definitions
 #define DATA_PIN 2   // DS - Serial Data Input
-#define LATCH_PIN 4  // ST_CP - Latch Pin
-#define CLOCK_PIN 3  // SH_CP - Clock Pin
+#define LATCH_PIN 3  // ST_CP - Latch Pin
+#define CLOCK_PIN 4  // SH_CP - Clock Pin
 
 // Display Control Pins
 #define DS1 5  // First Display - Tens Digit

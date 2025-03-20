@@ -48,7 +48,7 @@ const byte digitMap[10] = {
 
 // Modes
 enum Mode { TRAFFIC_LIGHT, BINARY_CALCULATOR };
-Mode currentMode = TRAFFIC_LIGHT;
+Mode currentMode = BINARY_CALCULATOR;
 
 // Binary Calculator Variables
 

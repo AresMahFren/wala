@@ -67,6 +67,8 @@ unsigned long buttonPressTime = 0;  // For detecting long press
 bool buttonState = false; // To store the time the button is pressed
 bool lastButtonState = false; // Previous state of the button (pressed or not)
 bool mode = false; //False for mode 1, True for mode 2
+int lastResult = -1;  // Stores the last computed result
+bool resultAvailable = false; // Flag to check if result should be displayed
 
 void setup() {
   pinMode(DATA_PIN, OUTPUT);
@@ -106,6 +108,9 @@ void setup() {
 }
 
 void loop() {
+  if (resultAvailable && currentMode == BINARY_CALCULATOR) {
+    displayResult(lastResult); // ✅ Continuously show last result
+  }
    bool currentButtonState = digitalRead(BUTTON) == HIGH;  // Read the button state (HIGH for pressed)
 
 
@@ -189,8 +194,8 @@ void disableTrafficLights() {
   updateShiftRegisters(0b00000000, 0b00000000);
 
   // Clear display
-  digitalWrite(DS1, HIGH);
-  digitalWrite(DS2, HIGH);
+  digitalWrite(DS1, LOW);
+  digitalWrite(DS2, LOW);
   digitalWrite(DS3, HIGH);
   digitalWrite(DS4, HIGH);
 }
@@ -254,34 +259,38 @@ void restoreTrafficLights() {
 
 void binaryCalculatorLoop() {
   if (currentMode == BINARY_CALCULATOR) {
+    disableTrafficLights();  // ✅ Ensure traffic lights are OFF
+
     int num1 = (digitalRead(B1) << 2) | (digitalRead(B2) << 1) | digitalRead(B3);
     int num2 = (digitalRead(B4) << 2) | (digitalRead(B5) << 1) | digitalRead(B6);
 
-    int result = calculate(num1, num2); // Perform the selected operation
-
-    // Display the result on the 7-segment
-    displayResult(result);
-    
+    lastResult = calculate(num1, num2); // Store result
+    resultAvailable = true;  // ✅ Set flag to keep displaying
   }
 }
 
+
 void displayResult(int result) {
-  // Limit result to 2 digits (0-99)
-  result = constrain(result, 0, 99);
-  
+  result = constrain(result, 0, 99); // Ensure within range
+
   int tens = result / 10;
   int ones = result % 10;
 
-  digitalWrite(DS1, LOW);
-  updateShiftRegisters(digitMap[tens], 0b00000000);
-  delay(5);
-  digitalWrite(DS1, HIGH);
+  for (int i = 0; i < 5; i++) {  // Refresh multiple times for persistence
+    // Display Tens Digit (DS1)
+    digitalWrite(DS1, LOW);
+    updateShiftRegisters(digitMap[tens], 0b00000000);
+    delay(10);  
+    digitalWrite(DS1, HIGH);
 
-  digitalWrite(DS2, LOW);
-  updateShiftRegisters(digitMap[ones], 0b00000000);
-  delay(5);
-  digitalWrite(DS2, HIGH);
+    // Display Ones Digit (DS2)
+    digitalWrite(DS2, LOW);
+    updateShiftRegisters(digitMap[ones], 0b00000000);
+    delay(10);
+    digitalWrite(DS2, HIGH);
+  }
 }
+
 
 int calculate(int num1, int num2) {
   switch (operation) {

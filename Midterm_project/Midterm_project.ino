@@ -4,10 +4,10 @@
 #define CLOCK_PIN 4  // SH_CP - Clock Pin
 
 // Display Control Pins
-#define DS1 5  // First Display - Tens Digit
-#define DS2 6  // First Display - Ones Digit
-#define DS3 7  // Second Display - Tens Digit
-#define DS4 8 // Second Display - Ones Digit
+#define DS1 8  // First Display - Tens Digit
+#define DS2 7  // First Display - Ones Digit
+#define DS3 6  // Second Display - Tens Digit
+#define DS4 5 // Second Display - Ones Digit
 
 // Traffic Light Shift Register Outputs (Q0 - Q5)
 #define GREEN_1  0
